@@ -1,0 +1,16 @@
+title : BabylonJS template
+
+# Table of content
+plan:
+  - title: Welcome # Set the page title (only displayed if your contribution has several pages)
+    statement: markdowns/welcome.md # Set the file path to the page content
+#  - title: Another Page
+#    statement: markdowns/another-page.md
+
+
+# Settings for your programming projects and the associated Docker images
+projects:
+  babylon:
+    root: /babylon-project # Set the root path to your babylon project
+    # Set the docker image. This image runs npm install for you on every build
+    runner: node

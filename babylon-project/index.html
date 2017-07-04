@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+        <title>Babylon.js sample code</title>
+        <!-- Babylon.js -->
+        <script src="//cdnjs.cloudflare.com/ajax/libs/babylonjs/2.5.0/babylon.js"></script>
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+        </style>
+        <script type="text/javascript">
+            // Detect WebGL
+            // From https://developer.mozilla.org/en-US/docs/Learn/WebGL/By_example/Detect_WebGL
+            window.addEventListener("load", function() {
+                var canvas = document.createElement("canvas");
+                // Get WebGLRenderingContext from canvas element.
+                var gl = canvas.getContext("webgl")
+                  || canvas.getContext("experimental-webgl");
+                // Report the result.
+                if (!(gl && gl instanceof WebGLRenderingContext)) {
+                    var warning = document.createElement('div');
+                    warning.innerHTML = "You browser doesn't support WebGL, the content of this playground might not work properly.";
+                    document.body.insertBefore(warning, document.body.firstChild)
+                }
+            }, false);
+        </script>
+    </head>
+<body>
+    <div id="canvasZone">
+        <canvas id="renderCanvas"></canvas>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
