@@ -14,24 +14,22 @@ var sliders = [{
     max: 10
 }, {
     key: 'friction',
-    max: 1
+    max: 0.5
 }];
 
-sliders.forEach(function(opt) {
+sliders.forEach(function (opt) {
     var label = opt.label || opt.key;
     var min = opt.min || 0;
+    var id = opt.key + '-slider';
     var html = '<div style="display:flex;">' +
-    '<input id="' + opt.key + '-slider" type="range" min="' + min + '" max="' + opt.max + '" step="0.1"> ' +
-    label +
-    '</div>';
-    
+        '<input id="' + id + '" type="range" min="' + min + '" max="' + opt.max + '" step="0.1"> ' +
+        label +
+        '</div>';
+
     controls.append(html);
-    
-    
-    $('#'+opt.key+'-slider').change(function(v) {
-        var value = v.value;
-        document.globals[opt.key] = value;
+
+    $('#' + id).bind('input', function () {
+        document.globals[opt.key] = +this.value;
     });
-    
 });
 

@@ -95,9 +95,9 @@ Boid.prototype.flock = function (boids, delta) {
 	var coh = this.cohesion(boids);
 
 	// Apply weights to forces	
-	sep.multiplyScalar(separateWeight);
-	ali.multiplyScalar(alignWeight);
-	coh.multiplyScalar(coheseWeight);
+	sep.multiplyScalar(globals.separateWeight);
+	ali.multiplyScalar(globals.alignWeight);
+	coh.multiplyScalar(globals.coheseWeight);
 
 	// Apply forces to boid
 	this.acceleration.add(sep).add(ali).add(coh);
