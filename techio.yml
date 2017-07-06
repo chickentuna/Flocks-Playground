@@ -1,4 +1,4 @@
-title : BabylonJS template
+title : Flocking Autonomous Agents
 
 # Table of content
 plan:
@@ -10,7 +10,7 @@ plan:
 
 # Settings for your programming projects and the associated Docker images
 projects:
-  babylon:
-    root: /babylon-project # Set the root path to your babylon project
+  flocks:
+    root: /project
     # Set the docker image. This image runs npm install for you on every build
-    runner: node
+    runner: bash
