@@ -9,6 +9,11 @@ var sliders = [{
 }, {
     key: 'cohesion',
     max: 10
+}, {
+    key: 'speed',
+    label: 'speed',
+    min: 0.1,
+    max: 10,
 }];
 
 // Weights
@@ -17,7 +22,7 @@ sliders.forEach(function (opt) {
     var min = opt.min || 0;
     var id = opt.key + '-slider';
     var html = '<div style="display:flex;">' +
-        '<input id="' + id + '" type="range" min="' + min + '" max="' + opt.max + '" step="0.1"> ' +
+        '<input value="'+weights[opt.key]+'" id="' + id + '" type="range" min="' + min + '" max="' + opt.max + '" step="0.1"> ' +
         label +
         '</div>';
 
