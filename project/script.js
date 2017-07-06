@@ -3,7 +3,7 @@
 //TODO: refactor magic numbers
 //TODO: implement fourth View rule
 //TODO: clarify the steer function, when do i normalize vectors, are they directions, forces, destinations? Do I always want to go at maxSpeed ?
-//TODO: Introduced varying speeds
+// Should friction be included? What of varying speeds?
 
 //LATER: implement the going further chapter (food etc)
 
@@ -29,6 +29,7 @@ var app = new PIXI.Application({
 });
 
 var OFF_SCREEN_BORDER = 60;
+var FRICTION = 0.05;
 
 var separateWeight = 2;
 var alignWeight = 1.5;
@@ -104,6 +105,7 @@ Boid.prototype.update = function (delta) {
 	// Update velocity
 	this.velocity.add(this.acceleration);
 	limitMagnitude(this.velocity, this.maxSpeed);
+	this.velocity.multiplyScalar(1 - FRICTION);
 
 	// Apply speed to position
 	this.position.add(this.velocity);
