@@ -1,4 +1,5 @@
-//TODO: neighbourhood angle
+//TODO: torus
+//TODO: neighbourhood angle + slider
 //TODO: refactor magic numbers
 //TODO: implement fourth View rule
 //TODO: clarify the steer function, when do i normalize vectors, are they directions, forces, destinations? Do I always want to go at maxSpeed ?
@@ -40,22 +41,22 @@ var boidLayer = new PIXI.Container();
 app.stage.addChild(boidLayer);
 
 function lerpAngle(start, end, amount, maxDelta) {
-  while (end > start + Math.PI)
-    end -= Math.PI * 2;
-  while (end < start - Math.PI)
-    end += Math.PI * 2;
-  var value;
-  if (maxDelta !== undefined && Math.abs(end - start) > maxDelta) {
-    value = end;
-  } else {
-    value = (start + ((end - start) * amount));
-  }
-  return (value % (Math.PI * 2));
+	while (end > start + Math.PI)
+		end -= Math.PI * 2;
+	while (end < start - Math.PI)
+		end += Math.PI * 2;
+	var value;
+	if (maxDelta !== undefined && Math.abs(end - start) > maxDelta) {
+		value = end;
+	} else {
+		value = (start + ((end - start) * amount));
+	}
+	return (value % (Math.PI * 2));
 }
 
 function limitMagnitude(v, amount) {
 	if (v.length() > amount) {
-		v.normalize().multiplyScalar(amount);
+		normalize(v).multiplyScalar(amount);
 	}
 }
 
@@ -108,7 +109,8 @@ Boid.prototype.update = function (delta) {
 	this.velocity.multiplyScalar(1 - friction);
 
 	// Apply speed to position
-	this.position.add(this.velocity.clone().multiplyScalar(weights.speed));
+	var advance = this.velocity.clone().multiplyScalar(weights.speed);
+	this.position.add(advance);
 
 	// Reset acceleration
 	this.acceleration.zero();
@@ -116,7 +118,7 @@ Boid.prototype.update = function (delta) {
 
 Boid.prototype.steer = function (desired) {
 	// Implement Reynolds: Steering = Desired - Velocity
-	var steering = desired.normalize().multiplyScalar(this.maxSpeed).subtract(this.velocity);
+	var steering = normalize(desired).multiplyScalar(this.maxSpeed).subtract(this.velocity);
 	limitMagnitude(steering, this.maxForce);
 	return steering;
 };
@@ -128,10 +130,11 @@ Boid.prototype.separation = function (boids) {
 	// For every boid in the system, check if it's too close
 	for (var i = 0, l = boids.length; i < l; ++i) {
 		var other = boids[i];
-		var d = this.position.distance(other.position);
+		var d = torusDistance(this.position, other.position);
 		if (other !== this && d < desiredSeparation && d > 0) {
 			// Calculate vector pointing away from neighbour
-			var diff = this.position.clone().subtract(other.position).normalize();
+			var diff = this.position.clone().subtract(other.position);
+			normalize(diff);
 			if (d > 0)
 				diff.divideScalar(d);
 			average.add(diff);
@@ -156,7 +159,7 @@ Boid.prototype.alignment = function (boids) {
 	var count = 0;
 	for (var i = 0, l = boids.length; i < l; ++i) {
 		var other = boids[i];
-		var d = this.position.distance(other.position);
+		var d = torusDistance(this.position, other.position);
 		if (other !== this && d < neighbordist) {
 			average.add(other.velocity);
 			count++;
@@ -178,7 +181,7 @@ Boid.prototype.cohesion = function (boids) {
 
 	for (var i = 0, l = boids.length; i < l; ++i) {
 		var other = boids[i];
-		var d = this.position.distance(other.position);
+		var d = torusDistance(this.position, other.position);
 		if (other !== this && d < neighbordist) {
 			average.add(other.position); // Add position
 			count++;
@@ -195,7 +198,7 @@ Boid.prototype.render = function () {
 	var sprite = this.graphics;
 	sprite.x = this.position.x;
 	sprite.y = this.position.y;
-	
+
 	sprite.rotation = lerpAngle(sprite.rotation, this.velocity.angle(), 0.1);
 };
 
@@ -206,16 +209,16 @@ for (var i = 0; i < 100; ++i) {
 
 function wrapAround(boid) {
 	if (boid.position.x < -OFF_SCREEN_BORDER) {
-	    boid.position.x = (app.screen.width + OFF_SCREEN_BORDER) + boid.position.x;
+		boid.position.x += app.screen.width + OFF_SCREEN_BORDER;
 	}
 	if (boid.position.y < -OFF_SCREEN_BORDER) {
-	    boid.position.y = (app.screen.height + OFF_SCREEN_BORDER) + boid.position.y;
+		boid.position.y += app.screen.height + OFF_SCREEN_BORDER;
 	}
-	if (boid.position.x > app.screen.width + OFF_SCREEN_BORDER) {
-		boid.position.x = -OFF_SCREEN_BORDER + (boid.position.x - (app.screen.width + OFF_SCREEN_BORDER));
+	if (boid.position.x >= app.screen.width + OFF_SCREEN_BORDER) {
+		boid.position.x -= OFF_SCREEN_BORDER + app.screen.width;
 	}
-	if (boid.position.y > app.screen.height + OFF_SCREEN_BORDER) {
-		boid.position.y = -OFF_SCREEN_BORDER + (boid.position.y - (app.screen.height + OFF_SCREEN_BORDER));
+	if (boid.position.y >= app.screen.height + OFF_SCREEN_BORDER) {
+		boid.position.y -= OFF_SCREEN_BORDER + app.screen.height;
 	}
 }
 
@@ -246,3 +249,21 @@ function animate(time) {
 
 requestAnimationFrame(animate);
 document.getElementById("canvasZone").appendChild(app.view);
+
+function normalize(v) {
+	if (v.isZero()) {
+		return v;
+	} else {
+		return v.normalize();
+	}
+}
+
+function torusDistance(a, b) {
+	var w = app.screen.width + OFF_SCREEN_BORDER * 2;
+	var h = app.screen.height + OFF_SCREEN_BORDER * 2;
+
+	var deltaX = Math.min(Math.abs(a.x - b.x), w - Math.abs(a.x - b.x));
+	var deltaY = Math.min(Math.abs(a.y - b.y), h - Math.abs(a.y - b.y));
+
+	return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+}
