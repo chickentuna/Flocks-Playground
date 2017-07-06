@@ -1,16 +1,13 @@
 var controls = $("#controls");
 
 var sliders = [{
-    key: 'separateWeight',
-    label: 'separation',
+    key: 'separation',
     max: 10
 }, {
-    key: 'alignWeight',
-    label: 'alignment',
+    key: 'alignment',
     max: 10
 }, {
-    key: 'coheseWeight',
-    label: 'cohesion',
+    key: 'cohesion',
     max: 10
 }];
 
@@ -27,7 +24,7 @@ sliders.forEach(function (opt) {
     controls.append(html);
 
     $('#' + id).bind('input', function () {
-        document.globals[opt.key] = +this.value;
+        weights[opt.key] = +this.value;
     });
 });
 

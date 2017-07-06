@@ -7,9 +7,6 @@
 
 //LATER: implement the going further chapter (food etc)
 
-document.globals = {};
-var globals = document.globals;
-
 var PALETTES = [
 	[0xBAAB88, 0x237272, 0x518985, 0x4f5453, 0x43304F],
 	[0x6E6159, 0x66782C, 0x7F963B, 0xADBF45, 0xAFC57A],
@@ -31,11 +28,11 @@ var app = new PIXI.Application({
 });
 
 var OFF_SCREEN_BORDER = 60;
-
-globals.friction = 0.05;
-globals.separateWeight = 2;
-globals.alignWeight = 1.5;
-globals.coheseWeight = 0.5;
+var weights = {};
+var friction = 0.05;
+weights.separation = 2;
+weights.alignment = 1.5;
+weights.cohesion = 0.5;
 
 var boidLayer = new PIXI.Container();
 
@@ -95,9 +92,9 @@ Boid.prototype.flock = function (boids, delta) {
 	var coh = this.cohesion(boids);
 
 	// Apply weights to forces	
-	sep.multiplyScalar(globals.separateWeight);
-	ali.multiplyScalar(globals.alignWeight);
-	coh.multiplyScalar(globals.coheseWeight);
+	sep.multiplyScalar(weights.separation);
+	ali.multiplyScalar(weights.alignment);
+	coh.multiplyScalar(weights.cohesion);
 
 	// Apply forces to boid
 	this.acceleration.add(sep).add(ali).add(coh);
@@ -107,7 +104,7 @@ Boid.prototype.update = function (delta) {
 	// Update velocity
 	this.velocity.add(this.acceleration);
 	limitMagnitude(this.velocity, this.maxSpeed);
-	this.velocity.multiplyScalar(1 - globals.friction);
+	this.velocity.multiplyScalar(1 - friction);
 
 	// Apply speed to position
 	this.position.add(this.velocity);
