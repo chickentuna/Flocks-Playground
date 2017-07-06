@@ -1,9 +1,9 @@
 //TODO: neighbourhood angle
-//TODO: sliders
 //TODO: refactor magic numbers
 //TODO: implement fourth View rule
 //TODO: clarify the steer function, when do i normalize vectors, are they directions, forces, destinations? Do I always want to go at maxSpeed ?
 // Should friction be included? What of varying speeds?
+//TODO: optimise
 
 //LATER: implement the going further chapter (food etc)
 
@@ -180,7 +180,7 @@ Boid.prototype.cohesion = function (boids) {
 
 	for (var i = 0, l = boids.length; i < l; ++i) {
 		var other = boids[i];
-		var d = this.position.distance(this.position, other.position);
+		var d = this.position.distance(other.position);
 		if (other !== this && d < neighbordist) {
 			average.add(other.position); // Add position
 			count++;
