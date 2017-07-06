@@ -7,7 +7,7 @@ The source code for this template is on [GitHub](https://github.com/TechDotIO/ba
 # Hands-on Demo
 
 @[Sample BabylonJS App Boilerplate]({
-	"stubs": ["script.js", "index.html", "run.sh"],
+	"stubs": ["script.js", "index.html", "controls.js","run.sh"],
 	"command": "sh run.sh"
 })
 
