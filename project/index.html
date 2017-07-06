@@ -21,6 +21,14 @@
                 height: 100%;
                 touch-action: none;
             }
+            
+            #controls {
+                position: absolute;
+                top: 0;
+                left: 0;
+                z-index: 1;
+            }
+
         </style>
         <script type="text/javascript">
             // Detect WebGL
@@ -43,6 +51,10 @@
     <div id="canvasZone">
         
     </div>
+    <div id="controls">
+        
+    </div>
     <script src="script.js"></script>
+    <script src="controls.js"></script>
 </body>
 </html>
