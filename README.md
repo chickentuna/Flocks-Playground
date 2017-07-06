@@ -1,3 +1,3 @@
-# BabylonJS Template for tech.io
+# A Tech.io playground about Flocking, a type of Swarm Intelligence for AI
 
-Standard template for BabylonJS contents on [Tech.io](Tech.io)
+See runnable content on [Tech.io](Tech.io)
