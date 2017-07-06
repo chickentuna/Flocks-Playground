@@ -33,6 +33,7 @@ var friction = 0.05;
 weights.separation = 2;
 weights.alignment = 1.5;
 weights.cohesion = 0.5;
+weights.speed = 3;
 
 var boidLayer = new PIXI.Container();
 
@@ -81,8 +82,8 @@ function Boid(x, y) {
 	this.position = new Victor(x, y);
 	this.velocity = new Victor(0, 0);
 	this.acceleration = new Victor(0, 0);
-	this.maxSpeed = 3;
 	this.maxForce = 0.05;
+	this.maxSpeed = 3;
 }
 
 Boid.prototype.flock = function (boids, delta) {
@@ -107,7 +108,7 @@ Boid.prototype.update = function (delta) {
 	this.velocity.multiplyScalar(1 - friction);
 
 	// Apply speed to position
-	this.position.add(this.velocity);
+	this.position.add(this.velocity.clone().multiplyScalar(weights.speed));
 
 	// Reset acceleration
 	this.acceleration.zero();
@@ -156,7 +157,7 @@ Boid.prototype.alignment = function (boids) {
 	for (var i = 0, l = boids.length; i < l; ++i) {
 		var other = boids[i];
 		var d = this.position.distance(other.position);
-		if (other !== this > 0 && d < neighbordist) {
+		if (other !== this && d < neighbordist) {
 			average.add(other.velocity);
 			count++;
 		}
