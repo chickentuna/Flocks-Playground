@@ -46,7 +46,6 @@ $('#boids-slider').bind('input', function() {
         });
     } else if (got < desired) {
         for (var i = 0; i < desired - got; ++i) {
-            var b = new Boid(0,0);
             boids.push(new Boid(Math.random() * app.screen.width, Math.random() * app.screen.height));
         }
     }
