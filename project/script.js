@@ -107,6 +107,9 @@ Boid.prototype.update = function (delta) {
 	this.velocity.add(this.acceleration);
 	limitMagnitude(this.velocity, this.maxSpeed);
 	this.velocity.multiplyScalar(1 - friction);
+	if (this.velocity.length() < 1e-6) {
+		this.velocity.zero();
+	}
 
 	// Apply speed to position
 	var advance = this.velocity.clone().multiplyScalar(weights.speed);
