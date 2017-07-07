@@ -10,11 +10,16 @@ var sliders = [{
     key: 'cohesion',
     max: 10
 }, {
-    key: 'speed',
-    label: 'speed',
-    min: 0.1,
-    max: 10,
-}];
+    key: 'periphery',
+    min: Math.PI / 8,
+    max: Math.PI,
+},
+{
+    key: 'range',
+    min: 0,
+    max: 2000
+}
+];
 
 // Weights
 sliders.forEach(function (opt) {

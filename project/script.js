@@ -1,5 +1,4 @@
-//TODO: torus
-//TODO: neighbourhood angle + slider
+
 //TODO: refactor magic numbers
 //TODO: implement fourth View rule
 //TODO: clarify the steer function, when do i normalize vectors, are they directions, forces, destinations? Do I always want to go at maxSpeed ?
@@ -29,12 +28,15 @@ var app = new PIXI.Application({
 });
 
 var OFF_SCREEN_BORDER = 60;
-var weights = {};
+var weights = {
+	separation: 1,
+	alignment: 1.5,
+	cohesion: 0.5,
+	speed: 3,
+	periphery: 3 * Math.PI / 4,
+	range: 50
+};
 var friction = 0.05;
-weights.separation = 2;
-weights.alignment = 1.5;
-weights.cohesion = 0.5;
-weights.speed = 3;
 
 var boidLayer = new PIXI.Container();
 
@@ -56,7 +58,7 @@ function lerpAngle(start, end, amount, maxDelta) {
 
 function limitMagnitude(v, amount) {
 	if (v.length() > amount) {
-		normalize(v).multiplyScalar(amount);
+		v.normalize().multiplyScalar(amount);
 	}
 }
 
@@ -77,6 +79,14 @@ function drawBoid(graphics, r) {
 	graphics.endFill();
 }
 
+function angleDiff(a, b) {
+	return Math.abs(lerpAngle(a, b, 0) - lerpAngle(a, b, 1));
+}
+
+function angleBetween(a, b) {
+	return b.clone().subtract(a).angle();
+}
+
 function Boid(x, y) {
 	this.radius = 10;
 	this.graphics = createBoidGraphics(this.radius);
@@ -87,11 +97,36 @@ function Boid(x, y) {
 	this.maxSpeed = 3;
 }
 
+Boid.prototype.getNeighbourhood = function (boids) {
+	var range = weights.range;
+	var periphery = weights.periphery;
+	var hood = [];
+	var self = this;
+	boids.forEach(function (boid) {
+		if (boid === self)
+			return;
+			
+		var distance = torusDistance(self.position, boid.position);
+		var angle = angleBetween(self.position, boid.position);
+		if (distance < range && angleDiff(angle, self.velocity.angle()) < periphery) {
+			hood.push({
+				boid: boid,
+				distance: distance,
+				angle: angle
+			});
+		}
+	});
+
+	return hood;
+};
+
 Boid.prototype.flock = function (boids, delta) {
+	// Find nearby boids
+	var hood = this.getNeighbourhood(boids);
 	// Calculate flocking forces
-	var sep = this.separation(boids);
-	var ali = this.alignment(boids);
-	var coh = this.cohesion(boids);
+	var sep = this.separation(hood);
+	var ali = this.alignment(hood);
+	var coh = this.cohesion(hood);
 
 	// Apply weights to forces	
 	sep.multiplyScalar(weights.separation);
@@ -120,26 +155,33 @@ Boid.prototype.update = function (delta) {
 };
 
 Boid.prototype.steer = function (desired) {
-	// Implement Reynolds: Steering = Desired - Velocity
+	// Steer with max speed
 	var steering = normalize(desired).multiplyScalar(this.maxSpeed).subtract(this.velocity);
 	limitMagnitude(steering, this.maxForce);
 	return steering;
 };
 
-Boid.prototype.separation = function (boids) {
-	var desiredSeparation = 25;
+Boid.prototype.steerJulien = function (desired) {
+	// Implement Reynolds: Steering = Desired - Velocity
+	// No max speed
+	var steering = desired.subtract(this.velocity);
+	limitMagnitude(steering, this.maxForce);
+	return steering;	
+};
+
+Boid.prototype.separation = function (hood) {
+	var desiredSeparation = this.radius * 2;
+
 	var average = new Victor(0, 0);
 	var count = 0;
 	// For every boid in the system, check if it's too close
-	for (var i = 0, l = boids.length; i < l; ++i) {
-		var other = boids[i];
-		var d = torusDistance(this.position, other.position);
-		if (other !== this && d < desiredSeparation && d > 0) {
-			// Calculate vector pointing away from neighbour
-			var diff = this.position.clone().subtract(other.position);
-			normalize(diff);
-			if (d > 0)
-				diff.divideScalar(d);
+	for (var i = 0, l = hood.length; i < l; ++i) {
+		var neighbour = hood[i];
+		var other = neighbour.boid;
+		var d = neighbour.distance;
+		if (d < desiredSeparation && d > 0) {
+			// Calculate vector pointing away from neighbour, weighted by distance 
+			var diff = this.position.clone().subtract(other.position).normalize().divideScalar(d);
 			average.add(diff);
 
 			// Keep track of how many close boids
@@ -148,6 +190,12 @@ Boid.prototype.separation = function (boids) {
 	}
 	if (count > 0) {
 		average.divideScalar(count);
+		/*
+		if (average.length() < desiredSeparation) {
+			//Get off me!			
+			average.normalize().multiplyScalar(this.maxSpeed);
+		}
+		*/
 		return this.steer(average);
 	}
 	return average;
@@ -156,17 +204,14 @@ Boid.prototype.separation = function (boids) {
 
 // Alignment
 // For every nearby boid in the system, calculate the average velocity
-Boid.prototype.alignment = function (boids) {
-	var neighbordist = 50;
+Boid.prototype.alignment = function (hood) {
 	var average = new Victor(0, 0);
 	var count = 0;
-	for (var i = 0, l = boids.length; i < l; ++i) {
-		var other = boids[i];
-		var d = torusDistance(this.position, other.position);
-		if (other !== this && d < neighbordist) {
-			average.add(other.velocity);
-			count++;
-		}
+	for (var i = 0, l = hood.length; i < l; ++i) {
+		var neighbour = hood[i];
+		var other = neighbour.boid;
+		average.add(other.velocity);
+		count++;
 	}
 	if (count > 0) {
 		average.divideScalar(count);
@@ -177,18 +222,15 @@ Boid.prototype.alignment = function (boids) {
 
 // Cohesion
 // For the average position (i.e. center) of all nearby boids, calculate steering vector towards that position
-Boid.prototype.cohesion = function (boids) {
-	var neighbordist = 50;
+Boid.prototype.cohesion = function (hood) {
 	var average = new Victor(0, 0);	 // Start with empty vector to accumulate all positions
 	var count = 0;
 
-	for (var i = 0, l = boids.length; i < l; ++i) {
-		var other = boids[i];
-		var d = torusDistance(this.position, other.position);
-		if (other !== this && d < neighbordist) {
-			average.add(other.position); // Add position
-			count++;
-		}
+	for (var i = 0, l = hood.length; i < l; ++i) {
+		var neighbour = hood[i];
+		var other = neighbour.boid;
+		average.add(other.position); // Add position
+		count++;
 	}
 	if (count > 0) {
 		average.divideScalar(count);
