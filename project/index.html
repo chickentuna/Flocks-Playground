@@ -32,24 +32,7 @@
                 -webkit-user-select: none;
                 -webkit-touch-callout: none;
             }
-
         </style>
-        <script type="text/javascript">
-            // Detect WebGL
-            // From https://developer.mozilla.org/en-US/docs/Learn/WebGL/By_example/Detect_WebGL
-            window.addEventListener("load", function() {
-                var canvas = document.createElement("canvas");
-                // Get WebGLRenderingContext from canvas element.
-                var gl = canvas.getContext("webgl")
-                  || canvas.getContext("experimental-webgl");
-                // Report the result.
-                if (!(gl && gl instanceof WebGLRenderingContext)) {
-                    var warning = document.createElement('div');
-                    warning.innerHTML = "You browser doesn't support WebGL, the content of this playground might not work properly.";
-                    document.body.insertBefore(warning, document.body.firstChild)
-                }
-            }, false);
-        </script>
     </head>
 <body>
     <div id="canvasZone">
