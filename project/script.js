@@ -92,7 +92,7 @@ function Boid(x, y) {
 	this.velocity = new Victor(0, 0);
 	this.acceleration = new Victor(0, 0);
 	this.maxSpeed = 6;
-	this.angle = 0;
+	this.angle = Math.random() * Math.PI * 2;
 }
 
 Boid.prototype.getNeighbourhood = function (boids) {
