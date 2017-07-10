@@ -2,15 +2,20 @@ title : Flocking Autonomous Agents
 
 # Table of content
 plan:
-  - title: Welcome # Set the page title (only displayed if your contribution has several pages)
-    statement: markdowns/welcome.md # Set the file path to the page content
-#  - title: Another Page
-#    statement: markdowns/another-page.md
+  - title: Introduction
+    statement: markdowns/1.1-intro.md # Set the file path to the page content
+  - title: Implementation
+    plan:
+      - title: Steering strategy
+      statement: markdowns/2.1-steering.md
+      - title: Group behaviour
+      statement: markdowns/2.2-group.md
+      - title: Environment
+      statement: markdowns/2.3-environment.md
+  - title: Going further
+    statement: markdowns/3.1-future.md
 
-
-# Settings for your programming projects and the associated Docker images
 projects:
   flocks:
     root: /project
-    # Set the docker image. This image runs npm install for you on every build
     runner: bash
