@@ -31,15 +31,17 @@ var weights = {
 	alignment: 1.5,
 	cohesion: 0.5,
 	speed: 1,
-	// periphery: 3 * Math.PI / 4,
 	periphery: Math.PI,
 	range: 50
 };
 var friction = 0.01;
 
 var boidLayer = new PIXI.Container();
+var foodLayer = new PIXI.Container();
 
+app.stage.addChild(foodLayer);
 app.stage.addChild(boidLayer);
+
 
 function lerpAngle(start, end, amount, maxDelta) {
 	while (end > start + Math.PI)
@@ -93,7 +95,7 @@ function Boid(x, y) {
 	this.velocity = new Victor(0, 0);
 	this.acceleration = new Victor(0, 0);
 	this.maxSpeed = 6;
-	this.angle = 0;
+	this.angle = Math.random()*Math.PI;
 }
 
 Boid.prototype.getNeighbourhood = function (boids) {
@@ -104,7 +106,7 @@ Boid.prototype.getNeighbourhood = function (boids) {
 	boids.forEach(function (boid) {
 		if (boid === self)
 			return;
-			
+
 		var distance = torusDistance(self.position, boid.position);
 		var angle = angleBetween(self.position, boid.position);
 		if (distance < range && angleDiff(angle, self.velocity.angle()) <= periphery) {
@@ -126,17 +128,73 @@ Boid.prototype.flock = function (boids, delta) {
 	var sep = this.separation(hood);
 	var ali = this.alignment(hood);
 	var coh = this.cohesion(hood);
+/*
+	var eat = new Victor(0, 0);
+	var boid = this;
+	for (var i = 0; i < foods.length; ++i) {
+		var food = foods[i];
+		if (food.radius <= 0) {
+			continue;
+		}
+		var d = torusDistance(boid.position, food);
+		*/
+		/*
+		if (d < boid.radius + food.radius) {
+			food.radius -= 1e-1;
+			eat = boid.steer(new Victor(0,0));
+			break;
+		} else if (d < weights.range + food.radius) {
+			eat.add(boid.steer(Victor.fromObject(food).subtract(boid.position)));
+		}*/
+/*
+		if (d < weights.range + food.radius) {
+			var distToBorder = d - food.radius;
+			var v;
+			if (distToBorder > 0) {
+				//Move away from border
+				v = boid.position.clone().subtract(Victor.fromObject(food)).normalize().multiplyScalar(this.maxSpeed / distToBorder);
 
-	// Apply weights to forces	
+			} else {
+				//Move away from center
+				v = boid.position.clone().subtract(Victor.fromObject(food)).normalize().multiplyScalar(this.maxSpeed);
+			}
+			eat.add(boid.steer(v));
+		}
+		
+	}*/
+
+	// Apply weights to forces
 	sep.multiplyScalar(weights.separation);
 	ali.multiplyScalar(weights.alignment);
 	coh.multiplyScalar(weights.cohesion);
 
+	//eat.multiplyScalar(3);
+
 	// Apply forces to boid
-	this.acceleration.add(sep).add(ali).add(coh).add(eat);
+	this.acceleration.add(sep).add(ali).add(coh);//.add(eat).add(exp);
 	if (!this.acceleration.isZero()) {
 		this.acceleration.normalize().multiplyScalar(weights.maxForce);
 	}
+};
+
+Boid.prototype.view = function (hood) {
+	var boid = this;
+	var budge = new Victor(0, 0);
+	hood.forEach(function (neihgbour) {
+		var other = neihgbour.boid;
+		var rel = other.position.clone().subtract(boid.position).rotate(-boid.angle).angle();
+
+		if (rel < Math.PI / 4 && rel >= 0) {
+			budge.add(new Victor(0, -1));
+		} else if (rel > -Math.PI / 4 && rel < 0) {
+			budge.add(new Victor(0, 1));
+		}
+
+	});
+	if (!budge.isZero()) {
+		return this.steer(budge.rotate(this.angle).normalize().multiplyScalar(this.maxSpeed));
+	}
+	return new Victor(0, 0);
 };
 
 Boid.prototype.update = function (delta) {
@@ -145,23 +203,43 @@ Boid.prototype.update = function (delta) {
 	limitMagnitude(this.velocity, this.maxSpeed);
 	this.velocity.multiplyScalar(1 - friction);
 	if (this.velocity.length() < 1e-3) {
-        this.velocity.zero();
+		this.velocity.zero();
 	} else {
-        this.angle = this.velocity.angle();
+		this.angle = this.velocity.angle();
 	}
 
 	// Apply speed to position
 	var advance = this.velocity.clone().multiplyScalar(weights.speed);
 	this.position.add(advance);
 
+	// Collisions
+	/*
+	var boid = this;
+	var next = boid.position.clone().add(advance);
+	var ok = true;
+	for (var i = 0; i < foods.length; ++i) {
+		var food = foods[i];
+		var d = torusDistance(next, food);
+		if (d < food.radius) {
+			boid.velocity.zero();
+			ok = false;
+			break;
+		}
+	}	
+
+	if (ok) {
+		this.position.add(advance);
+	}
+	*/
+
 	// Reset acceleration
 	this.acceleration.zero();
 };
 
 Boid.prototype.steer = function (desired) {
-    // Implement Reynolds: Steering = Desired - Velocity
+	// Implement Reynolds: Steering = Desired - Velocity
 	var steering = desired.subtract(this.velocity);
-	return steering;	
+	return steering;
 };
 
 Boid.prototype.separation = function (hood) {
@@ -231,14 +309,14 @@ Boid.prototype.cohesion = function (hood) {
 		var destination = average.divideScalar(count).subtract(this.position);
 		var dist = destination.length();
 		if (dist > 0) {
-		    destination.normalize();
+			destination.normalize();
 		}
 		if (dist > 20) {
-		    destination.multiplyScalar(this.maxSpeed);
+			destination.multiplyScalar(this.maxSpeed);
 		} else {
-		    destination.multiplyScalar(dist / 20 * this.maxSpeed);
+			destination.multiplyScalar(dist / 20 * this.maxSpeed);
 		}
-		
+
 		return this.steer(destination);
 	}
 	return average;
@@ -248,13 +326,26 @@ Boid.prototype.render = function () {
 	var sprite = this.graphics;
 	sprite.x = this.position.x;
 	sprite.y = this.position.y;
-    
+
 	sprite.rotation = lerpAngle(sprite.rotation, this.angle, 0.1);
 };
 
 var boids = [];
 for (var i = 0; i < 100; ++i) {
 	boids.push(new Boid(Math.random() * app.screen.width, Math.random() * app.screen.height));
+}
+
+var foods = [];
+for (var i = 0; i < 0; ++i) {
+	var f = new PIXI.Graphics();
+	f.radius = 100;
+	f.beginFill();
+	f.drawCircle(0, 0, 100);
+	f.endFill();
+	foods.push(f);
+	foodLayer.addChild(f);
+	f.x = Math.random() * (app.screen.width - 200) + 100;
+	f.y = Math.random() * (app.screen.height - 200) + 100;
 }
 
 function wrapAround(boid) {
@@ -286,6 +377,16 @@ function updateBoids(delta) {
 		// Render
 		boid.render();
 	});
+	foods.forEach(function (f) {
+		f.clear();
+
+		if (f.radius > 0) {
+			f.beginFill();
+			f.drawCircle(0, 0, f.radius);
+			f.endFill();
+		}
+
+	})
 }
 
 var lastTime = null;
