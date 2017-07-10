@@ -12,7 +12,7 @@ var PALETTES = [
 	[0xD4E2A6, 0xF3B993, 0xE27667, 0x4F3E3B, 0x99C4CC],
 	[0x0F5FAA, 0x25CCF8, 0xF5FDFD, 0x72B900, 0xF2D62F],
 	[0xC2BAB8, 0xA29696, 0x9D9648, 0xB6BE97, 0x343138],
-	[0x4F93A6, 0xF2BB9D, 0xD69382, 0xA47273, 0xB19F93]
+	[0x4F93A6, 0xF2BB9D, 0xD69382, 0xA47273, 0x0]
 ];
 
 var palette = PALETTES[Math.floor(Math.random() * PALETTES.length)];
@@ -31,7 +31,6 @@ var weights = {
 	alignment: 1.5,
 	cohesion: 0.5,
 	speed: 1,
-	// periphery: 3 * Math.PI / 4,
 	periphery: Math.PI,
 	range: 50
 };
@@ -126,6 +125,7 @@ Boid.prototype.flock = function (boids, delta) {
 	var sep = this.separation(hood);
 	var ali = this.alignment(hood);
 	var coh = this.cohesion(hood);
+	
 
 	// Apply weights to forces	
 	sep.multiplyScalar(weights.separation);

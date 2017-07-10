@@ -13,10 +13,12 @@ var sliders = [{
     key: 'speed',
     label: 'speed',
     min: 0.1,
-    max: 10,
-}, {
-    key: 'periphery',
-
+    max: 5,
+},{
+    key: 'range',
+    label: 'view distance',
+    min: 25,
+    max: 250
 }];
 
 // Weights
