@@ -3,15 +3,13 @@ title : Flocking Autonomous Agents
 # Table of content
 plan:
   - title: Introduction
-    statement: markdowns/1.1-intro.md # Set the file path to the page content
-  - title: Implementation
-    plan:
-      - title: Steering strategy
-      statement: markdowns/2.1-steering.md
-      - title: Group behaviour
-      statement: markdowns/2.2-group.md
-      - title: Environment
-      statement: markdowns/2.3-environment.md
+    statement: markdowns/1.1-intro.md # Set the file path to the page content 
+  - title: Steering strategy
+    statement: markdowns/2.1-steering.md
+  - title: Group behaviour
+    statement: markdowns/2.2-group.md
+  - title: Environment
+    statement: markdowns/2.3-environment.md
   - title: Going further
     statement: markdowns/3.1-future.md
 
