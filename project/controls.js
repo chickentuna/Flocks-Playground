@@ -69,4 +69,4 @@ function decimalToHex(d, padding) {
 
     return hex;
 }
-$('#controls').css('color', '#'+decimalToHex(palette[4],6))
+$('#controls').css('color', '#'+decimalToHex(palette[4], 6));
