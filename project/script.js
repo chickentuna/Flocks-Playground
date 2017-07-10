@@ -133,7 +133,7 @@ Boid.prototype.flock = function (boids, delta) {
 	coh.multiplyScalar(weights.cohesion);
 
 	// Apply forces to boid
-	this.acceleration.add(sep).add(ali).add(coh).add(eat);
+	this.acceleration.add(sep).add(ali).add(coh);
 	if (!this.acceleration.isZero()) {
 		this.acceleration.normalize().multiplyScalar(weights.maxForce);
 	}
