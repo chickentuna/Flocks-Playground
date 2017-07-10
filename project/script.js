@@ -1,8 +1,5 @@
 
 //TODO: refactor magic numbers
-//TODO: implement fourth View rule
-//TODO: clarify the steer function, when do i normalize vectors, are they directions, forces, destinations? Do I always want to go at maxSpeed ?
-// Should friction be included? What of varying speeds?
 //TODO: optimise
 
 //LATER: implement the going further chapter (food etc)
@@ -29,14 +26,16 @@ var app = new PIXI.Application({
 
 var OFF_SCREEN_BORDER = 60;
 var weights = {
-	separation: 1,
+	maxForce: 0.05,
+	separation: 2,
 	alignment: 1.5,
 	cohesion: 0.5,
-	speed: 3,
-	periphery: 3 * Math.PI / 4,
+	speed: 1,
+	// periphery: 3 * Math.PI / 4,
+	periphery: Math.PI,
 	range: 50
 };
-var friction = 0.05;
+var friction = 0.01;
 
 var boidLayer = new PIXI.Container();
 
@@ -93,8 +92,8 @@ function Boid(x, y) {
 	this.position = new Victor(x, y);
 	this.velocity = new Victor(0, 0);
 	this.acceleration = new Victor(0, 0);
-	this.maxForce = 0.05;
-	this.maxSpeed = 3;
+	this.maxSpeed = 6;
+	this.angle = 0;
 }
 
 Boid.prototype.getNeighbourhood = function (boids) {
@@ -108,7 +107,7 @@ Boid.prototype.getNeighbourhood = function (boids) {
 			
 		var distance = torusDistance(self.position, boid.position);
 		var angle = angleBetween(self.position, boid.position);
-		if (distance < range && angleDiff(angle, self.velocity.angle()) < periphery) {
+		if (distance < range && angleDiff(angle, self.velocity.angle()) <= periphery) {
 			hood.push({
 				boid: boid,
 				distance: distance,
@@ -134,7 +133,10 @@ Boid.prototype.flock = function (boids, delta) {
 	coh.multiplyScalar(weights.cohesion);
 
 	// Apply forces to boid
-	this.acceleration.add(sep).add(ali).add(coh);
+	this.acceleration.add(sep).add(ali).add(coh).add(eat);
+	if (!this.acceleration.isZero()) {
+		this.acceleration.normalize().multiplyScalar(weights.maxForce);
+	}
 };
 
 Boid.prototype.update = function (delta) {
@@ -142,8 +144,10 @@ Boid.prototype.update = function (delta) {
 	this.velocity.add(this.acceleration);
 	limitMagnitude(this.velocity, this.maxSpeed);
 	this.velocity.multiplyScalar(1 - friction);
-	if (this.velocity.length() < 1e-6) {
-		this.velocity.zero();
+	if (this.velocity.length() < 1e-3) {
+        this.velocity.zero();
+	} else {
+        this.angle = this.velocity.angle();
 	}
 
 	// Apply speed to position
@@ -155,22 +159,13 @@ Boid.prototype.update = function (delta) {
 };
 
 Boid.prototype.steer = function (desired) {
-	// Steer with max speed
-	var steering = normalize(desired).multiplyScalar(this.maxSpeed).subtract(this.velocity);
-	limitMagnitude(steering, this.maxForce);
-	return steering;
-};
-
-Boid.prototype.steerJulien = function (desired) {
-	// Implement Reynolds: Steering = Desired - Velocity
-	// No max speed
+    // Implement Reynolds: Steering = Desired - Velocity
 	var steering = desired.subtract(this.velocity);
-	limitMagnitude(steering, this.maxForce);
 	return steering;	
 };
 
 Boid.prototype.separation = function (hood) {
-	var desiredSeparation = this.radius * 2;
+	var desiredSeparation = this.radius * 2 + 5;
 
 	var average = new Victor(0, 0);
 	var count = 0;
@@ -189,14 +184,14 @@ Boid.prototype.separation = function (hood) {
 		}
 	}
 	if (count > 0) {
-		average.divideScalar(count);
+		//average.divideScalar(count);
 		/*
 		if (average.length() < desiredSeparation) {
 			//Get off me!			
 			average.normalize().multiplyScalar(this.maxSpeed);
 		}
 		*/
-		return this.steer(average);
+		return this.steer(average.normalize().multiplyScalar(this.maxSpeed));
 	}
 	return average;
 };
@@ -213,9 +208,9 @@ Boid.prototype.alignment = function (hood) {
 		average.add(other.velocity);
 		count++;
 	}
-	if (count > 0) {
-		average.divideScalar(count);
-		return this.steer(average);
+	if (count > 0 && !average.isZero()) {
+		//average.divideScalar(count);
+		return this.steer(average.normalize().multiplyScalar(this.maxSpeed));
 	}
 	return average;
 };
@@ -233,8 +228,18 @@ Boid.prototype.cohesion = function (hood) {
 		count++;
 	}
 	if (count > 0) {
-		average.divideScalar(count);
-		return this.steer(average.subtract(this.position));
+		var destination = average.divideScalar(count).subtract(this.position);
+		var dist = destination.length();
+		if (dist > 0) {
+		    destination.normalize();
+		}
+		if (dist > 20) {
+		    destination.multiplyScalar(this.maxSpeed);
+		} else {
+		    destination.multiplyScalar(dist / 20 * this.maxSpeed);
+		}
+		
+		return this.steer(destination);
 	}
 	return average;
 };
@@ -243,8 +248,8 @@ Boid.prototype.render = function () {
 	var sprite = this.graphics;
 	sprite.x = this.position.x;
 	sprite.y = this.position.y;
-
-	sprite.rotation = lerpAngle(sprite.rotation, this.velocity.angle(), 0.1);
+    
+	sprite.rotation = lerpAngle(sprite.rotation, this.angle, 0.1);
 };
 
 var boids = [];
