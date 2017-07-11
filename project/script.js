@@ -7,9 +7,9 @@
 var PALETTES = [
 	[0xBAAB88, 0x237272, 0x518985, 0x4f5453, 0x43304F],
 	[0x6E6159, 0x66782C, 0x7F963B, 0xADBF45, 0xAFC57A],
-	[0x0B415B, 0x17E0F5, 0xE7FFFF, 0x0AF7F1, 0x070322],
+	[0x0B415B, 0x17E0F5, 0xE7FFFF, 0x070322, 0x0AF7F1],
 	[0x8EA1A5, 0x721A33, 0x90012F, 0xC9012F, 0xDD0D2F],
-	[0xD4E2A6, 0xF3B993, 0xE27667, 0x4F3E3B, 0x99C4CC],
+	[0xD4E2A6, 0xF3B993, 0xE27667, 0x99C4CC, 0x4F3E3B],
 	[0x0F5FAA, 0x25CCF8, 0xF5FDFD, 0x72B900, 0xF2D62F],
 	[0xC2BAB8, 0xA29696, 0x9D9648, 0xB6BE97, 0x343138],
 	[0x4F93A6, 0xF2BB9D, 0xD69382, 0xA47273, 0x0]
@@ -32,7 +32,8 @@ var weights = {
 	cohesion: 0.5,
 	speed: 1,
 	periphery: Math.PI,
-	range: 50
+	range: 50,
+	desiredSpeed: 6
 };
 var friction = 0.01;
 
@@ -91,7 +92,6 @@ function Boid(x, y) {
 	this.position = new Victor(x, y);
 	this.velocity = new Victor(0, 0);
 	this.acceleration = new Victor(0, 0);
-	this.maxSpeed = 6;
 	this.angle = Math.random() * Math.PI * 2;
 }
 
@@ -142,7 +142,7 @@ Boid.prototype.flock = function (boids, delta) {
 Boid.prototype.update = function (delta) {
 	// Update velocity
 	this.velocity.add(this.acceleration);
-	limitMagnitude(this.velocity, this.maxSpeed);
+	// limitMagnitude(this.velocity, weights.desiredSpeed);
 	this.velocity.multiplyScalar(1 - friction);
 	if (this.velocity.length() < 1e-3) {
         this.velocity.zero();
@@ -188,10 +188,10 @@ Boid.prototype.separation = function (hood) {
 		/*
 		if (average.length() < desiredSeparation) {
 			//Get off me!			
-			average.normalize().multiplyScalar(this.maxSpeed);
+			average.normalize().multiplyScalar(weights.desiredSpeed);
 		}
 		*/
-		return this.steer(average.normalize().multiplyScalar(this.maxSpeed));
+		return this.steer(average.normalize().multiplyScalar(weights.desiredSpeed));
 	}
 	return average;
 };
@@ -210,7 +210,7 @@ Boid.prototype.alignment = function (hood) {
 	}
 	if (count > 0 && !average.isZero()) {
 		//average.divideScalar(count);
-		return this.steer(average.normalize().multiplyScalar(this.maxSpeed));
+		return this.steer(average.normalize().multiplyScalar(weights.desiredSpeed));
 	}
 	return average;
 };
@@ -233,12 +233,7 @@ Boid.prototype.cohesion = function (hood) {
 		if (dist > 0) {
 		    destination.normalize();
 		}
-		if (dist > 20) {
-		    destination.multiplyScalar(this.maxSpeed);
-		} else {
-		    destination.multiplyScalar(dist / 20 * this.maxSpeed);
-		}
-		
+		destination.multiplyScalar(weights.desiredSpeed);
 		return this.steer(destination);
 	}
 	return average;
