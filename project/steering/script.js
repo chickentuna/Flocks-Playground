@@ -73,6 +73,10 @@ function drawBoid(graphics, r) {
 	graphics.endFill();
 }
 
+function project(a,b) { 
+	return (b.clone().normalize()).clone().multiplyScalar(( b.clone().normalize()).dot(a)); 
+}
+
 function angleDiff(a, b) {
 	return Math.abs(lerpAngle(a, b, 0) - lerpAngle(a, b, 1));
 }
