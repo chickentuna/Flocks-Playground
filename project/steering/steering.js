@@ -20,14 +20,14 @@ Boid.prototype.update = function() {
 	// Update velocity
 	this.velocity.add(this.acceleration);	
 
+	// Apply friction
+	this.velocity.multiplyScalar(1 - getFriction());
+
 	// Apply velocity to position
 	this.position.add(this.velocity);
 
 	// Reset acceleration
 	this.acceleration.zero();
-
-	// Apply friction
-	this.velocity.multiplyScalar(1 - getFriction());
 };
 
 function limitForce(vector) {
