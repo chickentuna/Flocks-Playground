@@ -1,3 +1,25 @@
+
+function drawBoid(graphics, r) {
+	graphics.lineStyle(2, palette[1], 1);
+	graphics.beginFill(palette[2], 1);
+	graphics.moveTo(r, 0);
+	graphics.lineTo(-r, -r / 2);
+	graphics.lineTo(-r, r / 2);
+	graphics.lineTo(r, 0);
+	graphics.endFill();
+
+	graphics.lineStyle(2, palette[1], 0);
+
+	graphics.beginFill(0xFFFFFF, 1);
+	graphics.drawCircle(2*r/4, -r/3, r/4);
+	graphics.drawCircle(2*r/4, r/3, r/4);
+	graphics.endFill();
+
+	graphics.beginFill(0x0, 1);
+	graphics.drawCircle(2*r/4 + 1, -r/3, r/16);
+	graphics.drawCircle(2*r/4 + 1, r/3, r/16);
+	graphics.endFill();
+}
 Boid.prototype.flock = function (boids, delta) {
 	// Find nearby boids
 	var hood = this.getNeighbourhood(boids);
@@ -34,6 +56,7 @@ Boid.prototype.separation = function (hood) {
 			var diff = this.position.clone().subtract(other.position).normalize().divideScalar(d);
 			average.add(diff);
 
+			// Keep track of how many close boids
 			count++;
 		}
 	}
@@ -44,7 +67,6 @@ Boid.prototype.separation = function (hood) {
 };
 
 
-// Alignment
 Boid.prototype.alignment = function (hood) {
 	var average = new Victor(0, 0);
 	var count = 0;
@@ -60,7 +82,6 @@ Boid.prototype.alignment = function (hood) {
 	return average;
 };
 
-// Cohesion
 Boid.prototype.cohesion = function (hood) {
 	var average = new Victor(0, 0);
 	var count = 0;
