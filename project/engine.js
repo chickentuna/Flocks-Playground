@@ -235,3 +235,10 @@ function torusDistance(a, b) {
 
 	return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 }
+
+/**
+ * Gets the percentage position in [a;b] of number v
+ */
+function unlerp(a, b, v) {
+  return (v - a) / (b - a);
+}

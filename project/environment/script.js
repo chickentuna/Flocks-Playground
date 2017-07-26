@@ -3,7 +3,7 @@ var weights = {
 	cohesion: 0.5,
 	alignment: 1.5,
 	separation: 2,
-	fear: 5,
+	fear: 1,
 	hunger: 100,
 
 	// Physics
@@ -26,13 +26,13 @@ function drawBoid(graphics, r) {
 	graphics.lineStyle(2, palette[1], 0);
 
 	graphics.beginFill(0xFFFFFF, 1);
-	graphics.drawCircle(2*r/4, -r/3, r/4);
-	graphics.drawCircle(2*r/4, r/3, r/4);
+	graphics.drawCircle(2 * r / 4, -r / 3, r / 4);
+	graphics.drawCircle(2 * r / 4, r / 3, r / 4);
 	graphics.endFill();
 
 	graphics.beginFill(0x0, 1);
-	graphics.drawCircle(2*r/4 + 1, -r/3, r/16);
-	graphics.drawCircle(2*r/4 + 1, r/3, r/16);
+	graphics.drawCircle(2 * r / 4 + 1, -r / 3, r / 16);
+	graphics.drawCircle(2 * r / 4 + 1, r / 3, r / 16);
 	graphics.endFill();
 }
 Boid.prototype.flock = function (boids) {
@@ -135,7 +135,6 @@ Boid.prototype.decision = function (environment) {
 };
 
 Boid.prototype.eat = function (foods) {
-	var eat = new Victor(0, 0);
 	var closestFood = null;
 	var foodDistSq = 0;
 
@@ -145,13 +144,13 @@ Boid.prototype.eat = function (foods) {
 			continue;
 		}
 		var d = this.position.distanceSq(food.graphics);
-		
+
 		// Already eating
 		if (d < Math.pow(this.radius + food.radius, 2)) {
 			// Take a bite
 			food.amount -= 1;
 			// Stay put
-			return this.steer(new Victor(0,0));			
+			return this.steer(new Victor(0, 0));
 		} else if (d < Math.pow(this.radius + weights.range + food.radius, 2)) {
 			//Consider food
 			if (closestFood === null || foodDistSq > d) {
@@ -161,49 +160,54 @@ Boid.prototype.eat = function (foods) {
 		}
 	}
 	if (closestFood !== null) {
-		eat.add(this.steer(Victor.fromObject(closestFood.graphics).subtract(this.position)));
+		eat = this.steer(Victor.fromObject(closestFood.graphics).subtract(this.position).normalize().multiplyScalar(weights.desiredSpeed));
+		if (eat.length() > 0) {
+			eat.normalize().multiplyScalar(weights.hunger);
+		}
+		this.acceleration.add(eat);
 	}
-	if (eat.length() > 0) {
-		eat.normalize().multiplyScalar(weights.hunger);
-	}
-	this.acceleration.add(eat);
+	
 };
 
 Boid.prototype.avoid = function (walls) {
 	var avoid = new Victor(0, 0);
-	var wallRange = weights.range * 3;
-	
+	var wallRange = weights.range * 2;
+
 	for (var i = 0; i < walls.length; ++i) {
 		var wall = walls[i];
 		var d = this.position.distanceSq(wall.graphics);
-		
+
 		if (d < Math.pow(wallRange + wall.radius, 2)) {
+			var angle = angleBetween(this.position, Victor.fromObject(wall.graphics));
+			var theta = angleDiff(angle, this.angle);
 			var distToBorder = d - Math.pow(wall.radius, 2);
 			var v;
 			if (distToBorder > 0) {
 				//Move away from border
-				v = this.position.clone().subtract(Victor.fromObject(wall.graphics)).normalize().multiplyScalar(weights.desiredSpeed + weights.desiredSpeed / distToBorder);
-				// v = this.position.clone().subtract(Victor.fromObject(wall.graphics)).normalize().multiplyScalar(weights.desiredSpeed / distToBorder);
-				avoid.add(this.steer(v));
+				var coeff = 1 - unlerp(0,Math.PI, theta);
+				v = this.position.clone().subtract(wall.graphics).normalize().multiplyScalar(coeff);
+				avoid.add(v);
 			} else {
 				//I'm inside a wall!
 			}
-			
+
 		}
+
+	}
+
+	if (avoid.length() > 0) {
+		avoid = this.steer(avoid.normalize().multiplyScalar(weights.desiredSpeed));
+		this.acceleration.add(avoid.multiplyScalar(weights.fear));
 	}
 	
-	if (avoid.length() > 0) {
-		avoid.normalize().multiplyScalar(weights.fear);
-	}
-	this.acceleration.add(avoid);
 };
 
 
 function updateEnvironment() {
 	// Clear eaten foods
 	var leftovers = [];
-	foods.forEach(function(f) {
-		if ( f.amount <= 0) {
+	foods.forEach(function (f) {
+		if (f.amount <= 0) {
 			foodLayer.removeChild(f.graphics);
 		} else {
 			leftovers.push(f);
@@ -240,18 +244,18 @@ app.stage.addChild(boidLayer);
 
 
 function getFoodGraphics(r) {
-	var c = new PIXI.Container(); 
+	var c = new PIXI.Container();
 
 	var g = new PIXI.Graphics();
 	g.beginFill(palette[2], 1);
 	g.drawCircle(0, 0, r);
 	g.endFill();
-	
-	var label = new PIXI.Text('FOOD',{fontFamily : 'Arial', fontSize: 14, fill : palette[4], align : 'center'});
+
+	var label = new PIXI.Text('FOOD', { fontFamily: 'Arial', fontSize: 14, fill: palette[4], align: 'center' });
 	label.anchor.x = label.anchor.y = 0.5;
 
 	c.addChild(g);
-	c.addChild(label);	
+	c.addChild(label);
 	foodLayer.addChild(c);
 	return c;
 }
@@ -265,7 +269,7 @@ function getWallGraphics(r) {
 	return g;
 }
 
-function Food(x,y) {
+function Food(x, y) {
 	this.radius = 20;
 	this.amount = 800;
 	this.graphics = getFoodGraphics(this.radius);
@@ -273,7 +277,7 @@ function Food(x,y) {
 	this.graphics.y = y;
 }
 
-function Wall(x,y) {
+function Wall(x, y) {
 	this.radius = 40 + Math.random(60);
 	this.graphics = getWallGraphics(this.radius);
 	this.graphics.x = x;
@@ -282,13 +286,6 @@ function Wall(x,y) {
 
 var foods = [];
 var walls = [];
-
-// for (var i = 0; i < 10; ++i) {
-// 	var x = Math.random() * (app.screen.width - 200) + 100;
-// 	var y = Math.random() * (app.screen.height - 200) + 100;
-// 	var f = new Food(x, y);
-// 	foods.push(f);	
-// }
 
 for (var i = 0; i < 10; ++i) {
 	var x = Math.random() * (app.screen.width - 200) + 100;
@@ -299,7 +296,7 @@ for (var i = 0; i < 10; ++i) {
 
 app.stage.hitArea = new PIXI.Rectangle(0, 0, app.screen.width, app.screen.height);
 app.stage.interactive = true;
-app.stage.mousedown = function(e) {
+app.stage.mousedown = function (e) {
 	var p = e.data.getLocalPosition(this);
 	var f = new Food(p.x, p.y);
 	foods.push(f);
