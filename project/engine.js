@@ -26,10 +26,13 @@ var app = new PIXI.Application({
 
 var OFF_SCREEN_BORDER = 60;
 var weights = {
-	maxForce: 0.05,
+	//Rules	
 	separation: 2,
 	alignment: 1.5,
 	cohesion: 0.5,
+	
+	//Physics
+	maxForce: 0.05,
 	periphery: Math.PI,
 	range: 50,
 	desiredSpeed: 6
@@ -185,10 +188,19 @@ function wrapAround(boid) {
 	}
 }
 
-function updateBoids(delta) {
-	var environment = {
+function getEnvironment() {
+	return {
 		boids: boids
 	};
+}
+
+function updateEnvironment() {
+}
+
+function updateBoids() {
+	updateEnvironment();
+	
+	var environment = getEnvironment();
 
 	boids.forEach(function (boid) {
 		// Decide what to do by looking at other boids
@@ -206,12 +218,9 @@ function updateBoids(delta) {
 	});
 }
 
-var lastTime = null;
-function animate(time) {
-	delta = time - (lastTime || time);
-	updateBoids(delta);
+function animate() {
+	updateBoids();
 	app.render();
-	lastTime = time;
 	requestAnimationFrame(animate);
 }
 
