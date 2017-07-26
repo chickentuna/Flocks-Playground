@@ -149,6 +149,8 @@ Boid.prototype.eat = function (foods) {
 		if (d < Math.pow(this.radius + food.radius, 2)) {
 			// Take a bite
 			food.amount -= 1;
+			food.graphics.alpha = food.amount / food.initialAmount;
+
 			// Stay put
 			return this.steer(new Victor(0, 0));
 		} else if (d < Math.pow(this.radius + weights.range + food.radius, 2)) {
@@ -271,7 +273,8 @@ function getWallGraphics(r) {
 
 function Food(x, y) {
 	this.radius = 20;
-	this.amount = 800;
+	this.initialAmount = 800;
+	this.amount = this.initialAmount;
 	this.graphics = getFoodGraphics(this.radius);
 	this.graphics.x = x;
 	this.graphics.y = y;
