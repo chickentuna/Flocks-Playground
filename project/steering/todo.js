@@ -5,7 +5,7 @@ Boid.prototype.steer = function(desired) {
 
 function getFriction() {
 	//TODO !
-	return 0.5;
+	return 0.0;
 }
 
 function getMaxForce() {
