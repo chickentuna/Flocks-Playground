@@ -54,7 +54,17 @@ function MyBoid(x, y) {
 	this.label.anchor.y = 1.2;
 }
 
+MyBoid.prototype.decision = function() {
+	// Find a vector pointing towards the given target
+	var desired = getTarget().clone().subtract(this.position);
+	
+	// Set the length of the vector to 6.
+	if (!desired.isZero()) {
+		desired.normalize().multiplyScalar(DESIRED_SPEED);
+	}
 
+	this.acceleration = this.steer(desired);
+};
 MyBoid.prototype.update = function() {
 	// Limit acceleration force (smaller values make for wider turns)
 	var maxForce = 0.05;
@@ -85,14 +95,14 @@ MyBoid.prototype.steer = function(desired) {
 	return desired.subtract(this.velocity);
 };
 
-Boid.prototype.update2 = function (delta) {
+Boid.prototype.postUpdate = function () {
 	if (this.velocity.length() < 1e-3) {
 		this.velocity.zero();
 	} else {
 		this.angle = this.velocity.angle();
 	}
 };
-MyBoid.prototype.update2 = Boid.prototype.update2;
+MyBoid.prototype.postUpdate = Boid.prototype.postUpdate;
 Boid.prototype.render = function () {
 	var sprite = this.graphics;
 	sprite.x = this.position.x;
@@ -110,28 +120,27 @@ MyBoid.prototype.render = function () {
 };
 
 var boids = [];
-//for (var i = 0; i < 1; ++i) {
 boids.push(new Boid(Math.random() * app.screen.width, Math.random() * app.screen.height));
 boids.push(new MyBoid(Math.random() * app.screen.width, Math.random() * app.screen.height));
-//}
 
 var pad = 200;
 var target = new Victor().randomize(new Victor(pad, pad), new Victor(app.screen.width-pad, app.screen.height-pad));
 targetGraphics.x = target.x;
 targetGraphics.y = target.y;
 
-function updateBoids(delta) {
+function getTarget() {
+	return target;
+}
+
+function updateBoids() {
 	boids.forEach(function (boid) {
 		
-		var desired = target.clone().subtract(boid.position);
-		if (!desired.isZero()) {
-			desired.normalize().multiplyScalar(6);
-		}
-		boid.acceleration = boid.steer(desired);
+		// Decide what to do
+		boid.decision();
 
 		// Move the boid
-		boid.update(delta);
-		boid.update2(delta);
+		boid.update();
+		boid.postUpdate();
 
 		// Wrap around the screen
 		wrapAround(boid);
@@ -145,7 +154,6 @@ function updateBoids(delta) {
 				target = new Victor().randomize(new Victor(pad, pad), new Victor(app.screen.width-pad, app.screen.height-pad));
 				ang = angleDiff(boid.velocity.angle(), angleBetween(boid.position, target));
 			}
-			
 			
 			targetGraphics.x = target.x;
 			targetGraphics.y = target.y;
