@@ -1,6 +1,6 @@
 Boid.prototype.separation = function (boids) {
 	// Choose a distance at which boids start avoiding each other
-	var desiredSeparation = BOID_RANGE / 2;
+	var desiredSeparation = getBoidViewDistance() / 2;
 
 	var desired = new Victor(0, 0);
 

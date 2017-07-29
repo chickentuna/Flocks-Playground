@@ -1,4 +1,3 @@
-
 function drawBoid(graphics, r) {
 	graphics.lineStyle(2, palette[1], 1);
 	graphics.beginFill(palette[2], 1);
@@ -29,8 +28,8 @@ Boid.prototype.decision = function (environment) {
  * Limit the vector to a certain length.
  */
 function limitForce(vector) {
-	if (vector.length() > MAX_FORCE) {
-		vector.normalize().multiplyScalar(MAX_FORCE);
+	if (vector.length() > getMaxForce()) {
+		vector.normalize().multiplyScalar(getMaxForce());
 	}
 	return vector;
 }
