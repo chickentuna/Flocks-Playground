@@ -18,7 +18,7 @@ Boid.prototype.separation = function (boids) {
 	// If the boid had flockmates to separate from
 	if (desired.length() > 0) {
 		// We set the average vector to the length of our desired speed
-		desired.normalize().multiplyScalar(DESIRED_SPEED);
+		desired.normalize().multiplyScalar(getDesiredSpeed());
 
 		// We then calculate the steering force needed to get to that desired velocity
 		return this.steer(desired);
