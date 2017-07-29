@@ -1,9 +1,3 @@
-
-//TODO: refactor magic numbers
-//TODO: optimise
-
-//LATER: implement the going further chapter (food etc)
-
 var PALETTES = [
 	[0xBAAB88, 0x237272, 0x518985, 0x4f5453, 0x43304F],
 	[0x6E6159, 0x66782C, 0x7F963B, 0xADBF45, 0xAFC57A],
